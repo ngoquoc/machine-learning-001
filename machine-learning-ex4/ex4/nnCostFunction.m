@@ -64,44 +64,31 @@ Theta2_grad = zeros(size(Theta2));
 
 % Part 1
 A1 = [ones(m, 1) X];
-A2 = [ones(m, 1) sigmoid(A1*Theta1')];
-Output = A2*Theta2';
+Z2 = A1*Theta1';
+A2 = [ones(m, 1) sigmoid(Z2)];
+Z3 = A2*Theta2';
 
-sigmoid_val = sigmoid(Output);
+A3 = sigmoid(Z3);
 
 Y = repmat([1:num_labels], m, 1);
 Y = y == Y;
 
-J = (Y .* log(sigmoid_val) + (1-Y) .* log(1 - sigmoid_val));
+J = (Y .* log(A3) + (1-Y) .* log(1 - A3));
 J = -1/m * sum(sum(J));
 
+% Part 2: back propagation
+
+delta_output = A3 - Y;
+delta_2 = (delta_output * Theta2) .* sigmoidGradient([ones(m,1) A1*Theta1']);
+
+Theta1_grad = (delta_2(:,2:end)' * A1) / m;
+Theta2_grad = (delta_output' * A2) / m;
+
+% Part 3: regularization
 J = J + (lambda/(2*m))*(sum(sumsq(Theta1(:,2:end))) + sum(sumsq(Theta2(:,2:end))));
 
-% Part 2: back propagation
-%for i = 1:m
-  
-  % Step 1: set input layer values to the t-th training example x(t)
-  
-  % Step 2: 
-  %delta_k = Output(i) - Y(i);
-  
-  % Step 3:
-  %delta_2 = Theta2' * delta_k .* sigmoidGradient(A1(i)*Theta1');
-  
-  % Step 4:
-  %delta_2 = delta_2(2:end);
-  %delta_2 = delta + 
-  
-  % Step 5:
-  
-  
-%endfor
-
-delta_output = Output - Y;
-delta_2 = (delta_output * Theta2(:,2:end)) .* sigmoidGradient(A1*Theta1');
-
-Theta1_grad = 1/m * delta_2' * A1;
-Theta2_grad = 1/m * delta_output' * A2;
+Theta1_grad = Theta1_grad + (lambda/m)*[zeros(size(Theta1,1), 1) Theta1(:,2:end)];
+Theta2_grad = Theta2_grad + (lambda/m)*[zeros(size(Theta2,1), 1) Theta2(:,2:end)];
 
 % -------------------------------------------------------------
 
